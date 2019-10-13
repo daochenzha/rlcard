@@ -2,10 +2,11 @@
 ''' Implement Doudizhu Player class
 '''
 
-from rlcard.core import Player
+from rlcard.games.doudizhu.utils import get_gt_cards
+from rlcard.games.doudizhu.utils import cards2str
 
 
-class DoudizhuPlayer(Player):
+class DoudizhuPlayer(object):
     ''' Player can store cards in the player's hand and the role,
     determine the actions can be made according to the rules,
     and can perfrom corresponding action
@@ -25,11 +26,26 @@ class DoudizhuPlayer(Player):
         '''
 
         self.player_id = player_id
-        self.hand = []
+        self.initial_hand = None
         self.current_hand = []
         self.role = ''
         self.played_cards = None
         self.singles = '3456789TJQKA2BR'
+
+    def get_state(self, public, others_hands, actions):
+        state = {}
+        state['deck'] = public['deck']
+        state['seen_cards'] = public['seen_cards']
+        state['landlord'] = public['landlord']
+        state['trace'] = public['trace'].copy()
+        state['played_cards'] = public['played_cards'].copy()
+        state['self'] = self.player_id
+        state['initial_hand'] = self.initial_hand
+        state['current_hand'] = cards2str(self.current_hand)
+        state['others_hand'] = others_hands
+        state['actions'] = actions
+
+        return state
 
     def available_actions(self, greater_player=None, judger=None):
         ''' Get the actions can be made based on the rules
@@ -47,7 +63,7 @@ class DoudizhuPlayer(Player):
         if greater_player is None or greater_player is self:
             actions = judger.get_playable_cards(self)
         else:
-            actions = judger.get_gt_cards(self, greater_player)
+            actions = get_gt_cards(self, greater_player)
         return actions
 
     def play(self, action, greater_player=None):
@@ -61,7 +77,7 @@ class DoudizhuPlayer(Player):
             object of DoudizhuPlayer: If there is a new greater_player, return it, if not, return None
         '''
 
-        trans = {'T': '10', 'B': 'BJ', 'R': 'RJ'}
+        trans = {'B': 'BJ', 'R': 'RJ'}
         if action == 'pass':
             return greater_player
         else:

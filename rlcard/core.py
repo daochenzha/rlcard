@@ -22,7 +22,6 @@ class Card(object):
             suit: string, suit of the card, should be one of valid_suit
             rank: string, rank of the card, should be one of valid_rank
         '''
-
         self.suit = suit
         self.rank = rank
 
@@ -47,25 +46,21 @@ class Dealer(object):
     def __init__(self):
         ''' The dealer should have all the cards at the beginning of a game
         '''
-
-        pass
+        raise NotImplementedError
 
     def shuffle(self):
         ''' Shuffle the cards holded by dealer(remained_cards)
         '''
+        raise NotImplementedError
 
-        pass
-
-    def deal_cards(self, player_id, num):
+    def deal_cards(self, **kwargs):
         ''' Deal specific number of cards to a specific player
 
         Args:
             player_id: the id of the player to be dealt cards
             num: number of cards to be dealt
         '''
-
-        pass
-
+        raise NotImplementedError
 
 class Player(object):
     ''' Player stores cards in the player's hand, and can determine the actions can be made according to the rules
@@ -85,56 +80,48 @@ class Player(object):
         Returns:
             list: a list of available orders
         '''
-
-        pass
+        raise NotImplementedError
 
     def play(self):
         ''' Player's actual action in the round
         '''
-
-        pass
-
+        raise NotImplementedError
 
 class Judger(object):
     ''' Judger decides whether the round/game ends and return the winner of the round/game
     '''
 
-    def judge_round(self):
+    def judge_round(self, **kwargs):
         ''' Decide whether the round ends, and return the winner of the round
 
         Returns:
             int: return the player's id who wins the round or -1 meaning the round has not ended
         '''
+        raise NotImplementedError
 
-        pass
-
-    def judge_game(self):
+    def judge_game(self, **kwargs):
         ''' Decide whether the game ends, and return the winner of the game
 
         Returns:
             int: return the player's id who wins the game or -1 meaning the game has not ended
         '''
-
-        pass
+        raise NotImplementedError
 
 
 class Round(object):
     ''' Round stores the id the ongoing round and can call other Classes' functions to keep the game running
     '''
 
-    round_id = None
-
     def __init__(self):
         ''' When the game starts, round id should be 1
         '''
 
-        pass
+        raise NotImplementedError
 
-    def proceed_round(self):
+    def proceed_round(self, **kwargs):
         ''' Call other Classes's functions to keep the game running
         '''
-
-        pass
+        raise NotImplementedError
 
 
 class Game(object):
@@ -144,49 +131,35 @@ class Game(object):
     def init_game(self):
         ''' Initialize all characters in the game and start round 1
         '''
-
-        pass
+        raise NotImplementedError
 
     def step(self, action):
         ''' Perform one draw of the game and return next player number, and the state for next player
         '''
-
-        pass
+        raise NotImplementedError
 
     def step_back(self):
         ''' Takes one step backward and restore to the last state
         '''
-
-        pass
+        raise NotImplementedError
 
     def get_player_num(self):
         ''' Retrun the number of players in the game
         '''
-
-        pass
+        raise NotImplementedError
 
     def get_action_num(self):
         ''' Return the number of possible actions in the game
         '''
-
-        pass
+        raise NotImplementedError
 
     def get_player_id(self):
         ''' Return the current player that will take actions soon
         '''
-
-        pass
+        raise NotImplementedError
 
     def is_over(self):
         ''' Return whether the current game is over
         '''
+        raise NotImplementedError
 
-        pass
-
-
-class Monitor(object):
-    ''' Monitor records useful information in the game
-    '''
-
-    last_played = []
-    all_played = []

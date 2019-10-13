@@ -1,4 +1,3 @@
-import random
 import numpy as np
 
 from rlcard.utils.utils import *
@@ -13,8 +12,9 @@ class DoudizhuEnv(Env):
     ''' Doudizhu Environment
     '''
 
-    def __init__(self):
-        super().__init__(Game())
+    def __init__(self, allow_step_back=False):
+        super().__init__(Game(allow_step_back), allow_step_back)
+        self.state_shape = [6, 5, 15]
 
     def extract_state(self, state):
         ''' Encode state
@@ -29,18 +29,19 @@ class DoudizhuEnv(Env):
                              the recent three actions
                              the union of all played cards
         '''
-
-        encoded_state = np.zeros((6, 5, 15), dtype=int)
+        obs = np.zeros((6, 5, 15), dtype=int)
         for index in range(6):
-            encoded_state[index][0] = np.ones(15, dtype=int)
-        encode_cards(encoded_state[0], state['current_hand'])
-        encode_cards(encoded_state[1], state['others_hand'])
+            obs[index][0] = np.ones(15, dtype=int)
+        encode_cards(obs[0], state['current_hand'])
+        encode_cards(obs[1], state['others_hand'])
         for i, action in enumerate(state['trace'][-3:]):
             if action[1] != 'pass':
-                encode_cards(encoded_state[4-i], action[1])
+                encode_cards(obs[4-i], action[1])
         if state['played_cards'] is not None:
-            encode_cards(encoded_state[5], state['played_cards'])
-        return encoded_state
+            encode_cards(obs[5], state['played_cards'])
+
+        extrated_state = {'obs': obs, 'legal_actions': self.get_legal_actions()}
+        return extrated_state
 
     def get_payoffs(self):
         ''' Get the payoffs of players. Must be implemented in the child class.
@@ -48,8 +49,7 @@ class DoudizhuEnv(Env):
         Returns:
             payoffs (list): a list of payoffs for each player
         '''
-
-        return self.game.game_result
+        return self.game.judger.judge_payoffs(self.game.round.landlord_id, self.game.winner_id)
 
     def decode_action(self, action_id):
         ''' Action id -> the action in the game. Must be implemented in the child class.
@@ -60,7 +60,6 @@ class DoudizhuEnv(Env):
         Returns:
             action (string): the action that will be passed to the game engine.
         '''
-
         abstract_action = ACTION_LIST[action_id]
         legal_actions = self.game.state['actions']
         specific_actions = []
@@ -69,12 +68,13 @@ class DoudizhuEnv(Env):
                 if abstract == abstract_action:
                     specific_actions.append(legal_action)
         if specific_actions:
-            action = random.choice(specific_actions)
+            action = np.random.choice(specific_actions)
         else:
             if "pass" in legal_actions:
                 action = "pass"
             else:
-                action = random.choice(legal_actions)
+                action = np.random.choice(legal_actions)
+
         return action
 
     def get_legal_actions(self):
@@ -83,12 +83,12 @@ class DoudizhuEnv(Env):
         Returns:
             legal_actions (list): a list of legal actions' id
         '''
-
         legal_action_id = []
         legal_actions = self.game.state['actions']
-        for action in legal_actions:
-            for abstract in SPECIFIC_MAP[action]:
-                action_id = ACTION_SPACE[abstract]
-                if action_id not in legal_action_id:
-                    legal_action_id.append(action_id)
+        if legal_actions:
+            for action in legal_actions:
+                for abstract in SPECIFIC_MAP[action]:
+                    action_id = ACTION_SPACE[abstract]
+                    if action_id not in legal_action_id:
+                        legal_action_id.append(action_id)
         return legal_action_id

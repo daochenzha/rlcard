@@ -1,18 +1,16 @@
 from copy import deepcopy
 
-from rlcard.core import Game
 from rlcard.games.blackjack.dealer import BlackjackDealer as Dealer
 from rlcard.games.blackjack.player import BlackjackPlayer as Player
 from rlcard.games.blackjack.judger import BlackjackJudger as Judger
 
+class BlackjackGame(object):
 
-class BlackjackGame(Game):
-
-    def __init__(self):
+    def __init__(self, allow_step_back=False):
         ''' Initialize the class Blackjack Game
         '''
+        self.allow_step_back = allow_step_back
 
-        super().__init__()
 
     def init_game(self):
         ''' Initialilze the game
@@ -21,7 +19,6 @@ class BlackjackGame(Game):
             state (dict): the first state of the game
             player_id (int): current player's id
         '''
-
         self.dealer = Dealer()
         self.player = Player(0)
         self.judger = Judger()
@@ -41,16 +38,17 @@ class BlackjackGame(Game):
         Args:
             action (str): a specific action of blackjack. (Hit or Stand)
 
-        Returns:
+        Returns:/
             dict: next player's state
             int: next plater's id
         '''
+        if self.allow_step_back:
+            p = deepcopy(self.player)
+            d = deepcopy(self.dealer)
+            w = deepcopy(self.winner)
+            self.history.append((d,p,w))
 
         next_state = {}
-        p = deepcopy(self.player)
-        d = deepcopy(self.dealer)
-        w = deepcopy(self.winner)
-        self.history.append((d,p,w))
         # Play hit
         if action != "stand":
             self.dealer.deal_card(self.player)
@@ -86,22 +84,23 @@ class BlackjackGame(Game):
         Returns:
             Status (bool): check if the step back is success or not
         '''
-
+        #while len(self.history) > 0:
         if len(self.history) > 0:
             self.dealer, self.player, self.winner = self.history.pop()
             return True
         return False
 
-    def get_player_num(self):
+    @staticmethod
+    def get_player_num():
         ''' Return the number of players in blackjack
 
         Returns:
             number_of_player (int): blackjack only have 1 player
         '''
-
         return 1
 
-    def get_action_num(self):
+    @staticmethod
+    def get_action_num():
         ''' Return the number of applicable actions
 
         Returns:
@@ -115,7 +114,6 @@ class BlackjackGame(Game):
         Returns:
             player_id (int): current player's id
         '''
-
         return self.player.get_player_id()
 
     def get_state(self, player):
@@ -127,7 +125,6 @@ class BlackjackGame(Game):
         Returns:
             state (dict): corresponding player's state
         '''
-
         state = {}
         state['actions'] = ('hit', 'stand')
         hand = [card.get_index() for card in self.player.hand]
@@ -144,14 +141,13 @@ class BlackjackGame(Game):
         Returns:
             status (bool): True/False
         '''
-
         if self.player.status == 'bust'or self.dealer.status == 'bust' or (self.winner['dealer'] != 0 or self.winner['player'] != 0):
             return True
         else:
             return False
 
 
-########################################################## 
+##########################################################
 #    # For testing
 #    def _start_game(self):
 #        while True:

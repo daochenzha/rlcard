@@ -2,62 +2,25 @@
 ''' Implement Doudizhu Judger class
 '''
 
-from rlcard.core import Judger
-from rlcard.games.doudizhu.utils import CARD_TYPE, TYPE_CARD
+from rlcard.games.doudizhu.utils import CARD_TYPE
 from rlcard.games.doudizhu.utils import cards2str, contains_cards
 
 
-class DoudizhuJudger(Judger):
+class DoudizhuJudger(object):
     ''' Determine what cards a player can play
     '''
 
     def __init__(self, players):
         ''' Initilize the Judger class for Dou Dizhu
         '''
-
-        self.playable_cards = [CARD_TYPE.copy() for i in range(3)]
+        all_cards_list = CARD_TYPE[1]
+        self.playable_cards = [set() for _ in range(3)]
         for player in players:
-            self.get_playable_cards(player)
-
-    def get_gt_cards(self, player, greater_player):
-        ''' Provide player's cards which are greater than the ones played by
-        previous player in one round
-
-        Args:
-            player (DoudizhuPlayer object): the player waiting to play cards
-            greater_player (DoudizhuPlayer object): the player who played current biggest cards.
-
-        Returns:
-            list: list of string of greater cards
-
-        Note:
-            1. return value contains 'pass'
-        '''
-
-        # add 'pass' to legal actions
-        gt_cards = ['pass']
-        current_hand = cards2str(player.current_hand)
-        target_cards = greater_player.played_cards
-        target_types = CARD_TYPE[target_cards]
-        type_dict = {}
-        for card_type, weight in target_types:
-            if card_type not in type_dict:
-                type_dict[card_type] = weight
-        if 'rocket' in type_dict:
-            return gt_cards
-        type_dict['rocket'] = -1
-        if 'bomb' not in type_dict:
-            type_dict['bomb'] = -1
-        for card_type, weight in type_dict.items():
-            candidate = TYPE_CARD[card_type]
-            for can_weight, cards_list in candidate.items():
-                if int(can_weight) > weight:
-                    for cards in cards_list:
-                        # TODO: improve efficiency
-                        if cards not in gt_cards and contains_cards(current_hand, cards):
-                        # if self.contains_cards(current_hand, cards):
-                            gt_cards.append(cards)
-        return gt_cards
+            player_id = player.player_id
+            current_hand = cards2str(player.current_hand)
+            for cards in all_cards_list:
+                if contains_cards(current_hand, cards):
+                    self.playable_cards[player_id].add(cards)
 
     def get_playable_cards(self, player):
         ''' Provide all legal cards the player can play according to his
@@ -65,11 +28,12 @@ class DoudizhuJudger(Judger):
 
         Args:
             player (DoudizhuPlayer object): object of DoudizhuPlayer
+            init_flag (boolean): For the first time, set it True to accelerate
+              the preocess.
 
         Returns:
             list: list of string of playable cards
         '''
-
         player_id = player.player_id
         current_hand = cards2str(player.current_hand)
         missed = None
@@ -77,15 +41,45 @@ class DoudizhuJudger(Judger):
             if single not in current_hand:
                 missed = single
                 break
-        playable_cards = list(self.playable_cards[player_id])
+
+        playable_cards = self.playable_cards[player_id].copy()
+
         if missed is not None:
             position = player.singles.find(missed)
             player.singles = player.singles[position+1:]
             for cards in playable_cards:
                 if missed in cards or (not contains_cards(current_hand, cards)):
-                    del self.playable_cards[player_id][cards]
+                    self.playable_cards[player_id].remove(cards)
         else:
             for cards in playable_cards:
                 if not contains_cards(current_hand, cards):
-                    del self.playable_cards[player_id][cards]
-        return list(self.playable_cards[player_id])
+                    #del self.playable_cards[player_id][cards]
+                    self.playable_cards[player_id].remove(cards)
+        return self.playable_cards[player_id]
+
+    @staticmethod
+    def judge_game(players, player_id):
+        ''' Judge whether the game is over
+
+        Args:
+            players (list): list of DoudizhuPlayer objects
+            player_id (int): integer of player's id
+
+        Returns:
+            (bool): True if the game is over
+        '''
+        player = players[player_id]
+        if not player.current_hand:
+            return True
+        return False
+
+    @staticmethod
+    def judge_payoffs(landlord_id, winner_id):
+        payoffs = [0, 0, 0]
+        if winner_id == landlord_id:
+            payoffs[landlord_id] = 1
+        else:
+            for index, _ in enumerate(payoffs):
+                if index != landlord_id:
+                    payoffs[index] = 1
+        return payoffs

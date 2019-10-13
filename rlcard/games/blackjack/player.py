@@ -1,7 +1,5 @@
-from rlcard.core import Player
 
-
-class BlackjackPlayer(Player):
+class BlackjackPlayer(object):
 
     def __init__(self, player_id):
         ''' Initialize a Blackjack player class
@@ -9,7 +7,6 @@ class BlackjackPlayer(Player):
         Args:
             player_id (int): id for the player
         '''
-
         self.player_id = player_id
         self.hand = []
         self.status = 'alive'
@@ -18,5 +15,4 @@ class BlackjackPlayer(Player):
     def get_player_id(self):
         ''' Return player's id
         '''
-
         return self.player_id

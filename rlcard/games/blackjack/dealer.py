@@ -1,15 +1,13 @@
 import random
 
-from rlcard.core import Dealer
 from rlcard.utils.utils import init_standard_deck
 
 
-class BlackjackDealer(Dealer):
+class BlackjackDealer(object):
 
     def __init__(self):
         ''' Initialize a Blackjack dealer class
         '''
-
         super().__init__()
         self.deck = init_standard_deck()
         self.shuffle()
@@ -20,7 +18,6 @@ class BlackjackDealer(Dealer):
     def shuffle(self):
         ''' Shuffle the deck
         '''
-
         random.shuffle(self.deck)
 
     def deal_card(self, player):
@@ -29,6 +26,5 @@ class BlackjackDealer(Dealer):
         Args:
             player_id (int): the target player's id
         '''
-
         card = self.deck.pop()
         player.hand.append(card)
